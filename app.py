@@ -6,6 +6,8 @@ from typing import Optional
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import re
+
 
 
 
@@ -144,16 +146,17 @@ def crear_libro(
     titulo: str = Body(...),
     isbn: str = Body(...),
     autor_id: int = Body(...),
-    anio_publicacion: Optional[str] = Body(None, alias="año_publicacion"),
+    anio_publicacion: Optional[int] = Body(None, alias="anio_publicacion"),
     genero: Optional[str] = Body(None),
     db: Session = Depends(get_db)
 ):
-    
+    if not isbn or not re.search(r"[A-Za-z0-9]", isbn):
+        raise HTTPException(status_code=400, detail="El ISBN debe contener al menos una letra o numero")
+
     autor = db.query(Autor).filter(Autor.id == autor_id).first()
     if not autor:
         raise HTTPException(status_code=400, detail="El autor no existe")
 
-    
     if db.query(Libro).filter(Libro.isbn == isbn).first():
         raise HTTPException(status_code=400, detail="El ISBN ya existe")
 
