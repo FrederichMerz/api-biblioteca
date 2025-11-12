@@ -341,6 +341,7 @@ def actualizar_libro(
     libro = db.query(Libro).filter(Libro.id == libro_id).first()
     if not libro:
         raise HTTPException(status_code=404, detail="Libro no encontrado")
+    
 
     titulo = body.get("titulo")
     isbn = body.get("isbn")
@@ -349,7 +350,7 @@ def actualizar_libro(
     genero = body.get("genero")
     disponible = body.get("disponible")
 
-    
+    libro.titulo = titulo
 
     if autor_id:
         autor = db.query(Autor).filter(Autor.id == autor_id).first()
