@@ -311,7 +311,7 @@ def actualizar_libro(
         "titulo": "Nuevo titulo",
         "isbn": "123-4567890123",
         "autor_id": 1,
-        "año_publicacion": "2025",
+        "año_publicacion": 2025,
         "genero": "Ficción",
         "disponible": True
     }),

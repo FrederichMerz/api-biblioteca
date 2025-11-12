@@ -1,8 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
 
-url_database = "sqlite:///./biblioteca.db"
+load_dotenv()
+
+url_database = os.getenv("URL_DATABASE")
 
 
 engine = create_engine(
