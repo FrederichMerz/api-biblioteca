@@ -10,9 +10,9 @@ import re
 
 
 
-
-inicializar_bd()
 load_dotenv()
+inicializar_bd()
+
 
 app = FastAPI(title="API Biblioteca", version="1.0")
 
