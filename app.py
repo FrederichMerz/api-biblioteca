@@ -157,8 +157,8 @@ def crear_libro(
     if not titulo or not titulo.strip() or not re.search(r"[A-Za-z]", titulo):
         raise HTTPException(status_code=400, detail="El titulo es requerido y debe contener al menos una letra.")
     
-    if not isbn or not re.search(r"[A-Za-z0-9]", isbn):
-        raise HTTPException(status_code=400, detail="El ISBN debe contener al menos una letra o numero")
+    if not isbn or not re.match(r"^(?:\d[-]?){9,12}\d$", isbn):
+        raise HTTPException(status_code=400, detail="El ISBN debe tener entre 10 y 13 digitos numericos y puede incluir guiones (-)")
 
     autor = db.query(Autor).filter(Autor.id == autor_id).first()
     if not autor:
@@ -166,6 +166,12 @@ def crear_libro(
 
     if db.query(Libro).filter(Libro.isbn == isbn).first():
         raise HTTPException(status_code=400, detail="El ISBN ya existe")
+    
+    if not isinstance(anio_publicacion, int):
+        raise HTTPException(status_code=400, detail="El año de publicacion debe ser un numero entero.")
+    
+    if anio_publicacion <= 0:
+        raise HTTPException(status_code=400, detail="El año de publicacion no puede ser 0 ni negativo.")
     
     if genero is not None:
         if not genero.strip():
@@ -351,20 +357,23 @@ def actualizar_libro(
             raise HTTPException(status_code=400, detail="El autor especificado no existe")
         libro.autor_id = autor_id
 
-    if titulo is not None:
-        if not titulo.strip():
-            raise HTTPException(
-                status_code=400,
-                detail="El titulo no puede contener solo espacios."
-            )
-        libro.titulo = titulo.strip()
     if isbn:
+        if not re.fullmatch(r"^(?:\d[-]?){9,12}\d$", isbn):
+            raise HTTPException(status_code=400, detail="El ISBN debe tener entre 10 y 13 digitos numericos y puede incluir guiones (-).")
+
         otro_libro = db.query(Libro).filter(Libro.isbn == isbn, Libro.id != libro_id).first()
         if otro_libro:
-            raise HTTPException(status_code=400, detail="El ISBN ya existe")
+            raise HTTPException(status_code=400, detail="El ISBN ya existe en otro libro.")
+
         libro.isbn = isbn
+
     if año_publicacion is not None:
+        if not isinstance(año_publicacion, int):
+            raise HTTPException(status_code=400, detail="El año de publicacion debe ser un numero entero.")
+        if año_publicacion <= 0:
+            raise HTTPException(status_code=400, detail="El año de publicacion no puede ser 0 ni negativo.")
         libro.año_publicacion = año_publicacion
+
     if genero is not None:
         if not genero.strip():
             raise HTTPException(
@@ -372,6 +381,7 @@ def actualizar_libro(
                 detail="El campo genero no debe contener solo espacios."
             )
         genero = genero.strip()
+
     if disponible is not None:
         libro.disponible = bool(disponible)
 
