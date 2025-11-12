@@ -32,8 +32,8 @@ def crear_autor(
     fecha_nacimiento: str = Body(None, description="Fecha de nacimiento en formato YYYY-MM-DD"),
     db: Session = Depends(get_db)
 ):
-    if not nombre:
-        raise HTTPException(status_code=400, detail="El campo 'nombre' es requerido")
+    if not nombre or not nombre.strip():
+        raise HTTPException(status_code=400, detail="El campo nombre es requerido y debe contener al menos una letra.")
 
     fecha_obj = None
     if fecha_nacimiento:
@@ -105,11 +105,14 @@ def actualizar_autor(
     if not autor:
         raise HTTPException(status_code=404, detail="Autor no encontrado")
 
-
-    if nombre:
-        autor.nombre = nombre
-    if nacionalidad:
-        autor.nacionalidad = nacionalidad
+    if nombre is not None:
+        if not nombre.strip():
+            raise HTTPException(status_code=400, detail="El nombre no puede contener solo espacios.")
+        autor.nombre = nombre.strip()
+    if nacionalidad is not None:
+        if not nacionalidad.strip():
+            raise HTTPException(status_code=400,detail="La nacionalidad no puede contener solo espacios.")
+        autor.nacionalidad = nacionalidad.strip()
     if fecha_nacimiento:
         try:
             autor.fecha_nacimiento = datetime.strptime(fecha_nacimiento, "%Y-%m-%d").date()
@@ -150,6 +153,10 @@ def crear_libro(
     genero: Optional[str] = Body(None),
     db: Session = Depends(get_db)
 ):
+    
+    if not titulo or not titulo.strip() or not re.search(r"[A-Za-z]", titulo):
+        raise HTTPException(status_code=400, detail="El titulo es requerido y debe contener al menos una letra.")
+    
     if not isbn or not re.search(r"[A-Za-z0-9]", isbn):
         raise HTTPException(status_code=400, detail="El ISBN debe contener al menos una letra o numero")
 
@@ -159,6 +166,14 @@ def crear_libro(
 
     if db.query(Libro).filter(Libro.isbn == isbn).first():
         raise HTTPException(status_code=400, detail="El ISBN ya existe")
+    
+    if genero is not None:
+        if not genero.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="El campo genero no debe contener solo espacios."
+            )
+        genero = genero.strip()
 
     nuevo_libro = Libro(
         titulo=titulo,
@@ -336,8 +351,13 @@ def actualizar_libro(
             raise HTTPException(status_code=400, detail="El autor especificado no existe")
         libro.autor_id = autor_id
 
-    if titulo:
-        libro.titulo = titulo
+    if titulo is not None:
+        if not titulo.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="El titulo no puede contener solo espacios."
+            )
+        libro.titulo = titulo.strip()
     if isbn:
         otro_libro = db.query(Libro).filter(Libro.isbn == isbn, Libro.id != libro_id).first()
         if otro_libro:
@@ -345,8 +365,13 @@ def actualizar_libro(
         libro.isbn = isbn
     if año_publicacion is not None:
         libro.año_publicacion = año_publicacion
-    if genero:
-        libro.genero = genero
+    if genero is not None:
+        if not genero.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="El campo genero no debe contener solo espacios."
+            )
+        genero = genero.strip()
     if disponible is not None:
         libro.disponible = bool(disponible)
 
